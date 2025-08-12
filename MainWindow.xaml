@@ -164,7 +164,10 @@
                     </Button>
                 </StackPanel>
                 <StackPanel Height="200" Width="800" Grid.Row="3" Margin="150,0" VerticalAlignment="Top">
-                    <DataGrid Name="dgvCurrency" AutoGenerateColumns="False" Height="180" Margin="10" Width="480" Background="Transparent" CanUserAddRows="False" SelectedCellsChanged="dgvCurrency_SelectedCellsChanged" SelectionUnit="Cell" VerticalScrollBarVisibility="Auto">
+                    <DataGrid Name="dgvCurrency" AutoGenerateColumns="False" Height="180" 
+                              Margin="10" Width="480" Background="Transparent" CanUserAddRows="False" 
+                              SelectedCellsChanged="dgvCurrency_SelectedCellsChanged" SelectionUnit="Cell" 
+                              VerticalScrollBarVisibility="Auto">
                         <DataGrid.Columns>
                             <DataGridTextColumn x:Name="Id" Header="Id" Width="100" CanUserResize="False" Visibility="Hidden" Binding="{Binding Path=Id}"/>
                             

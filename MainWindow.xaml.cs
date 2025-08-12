@@ -88,5 +88,18 @@ namespace CurrencyConverter
             lblCurrency.Content = "";
             txtCurrency.Focus();
         }
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void dgvCurrency_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
+        {
+
+        }
     }
 }
