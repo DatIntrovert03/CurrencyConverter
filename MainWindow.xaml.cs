@@ -25,7 +25,6 @@ namespace CurrencyConverter
             DataTable dtCurrency = new DataTable();
             dtCurrency.Columns.Add("Text");
             dtCurrency.Columns.Add("Value");
-
             dtCurrency.Rows.Add("--Select--",0);
             dtCurrency.Rows.Add("INR", 1);
             dtCurrency.Rows.Add("USD", 75);
