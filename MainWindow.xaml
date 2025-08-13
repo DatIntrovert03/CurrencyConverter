@@ -73,8 +73,6 @@
                     <ComboBox Name="cmbFromCurrency" Width="170" Height="30" 
                   Margin="60 0 40 0" FontSize="18" VerticalContentAlignment="Center" 
                   VerticalAlignment="Top" MaxDropDownHeight="150"></ComboBox>
-                    <fa:IconBlock Icon="Exchange" Height="30" Width="30" 
-                      Foreground="White" VerticalAlignment="Top" />
                     <ComboBox Name="cmbToCurrency" Width="170" Height="30" Margin="40 0 0 0"
                   FontSize="18" VerticalContentAlignment="Center" VerticalAlignment="Top" 
                   MaxDropDownHeight="150"></ComboBox>

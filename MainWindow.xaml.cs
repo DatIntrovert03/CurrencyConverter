@@ -10,6 +10,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Configuration;
+using Microsoft.Data.SqlClient;//we need to install the microsoft.Data.Sqlclient Nuget Package
+
 
 namespace CurrencyConverter
 {
@@ -18,33 +20,57 @@ namespace CurrencyConverter
     /// </summary>
     public partial class MainWindow : Window
     {
+        SqlConnection con = new SqlConnection();
+        SqlCommand cmd = new SqlCommand();
+        SqlDataAdapter da = new SqlDataAdapter();
+
+        private int CurrencyId = 0;
+        private double FromAmount = 0;
+        private double ToAmount = 0;
         public MainWindow(){
             InitializeComponent();
             BindCurrency();
+            mycon();
         }
            private void BindCurrency(){
+            mycon();
             DataTable dtCurrency = new DataTable();
-            dtCurrency.Columns.Add("Text");
-            dtCurrency.Columns.Add("Value");
-            dtCurrency.Rows.Add("--Select--",0);
-            dtCurrency.Rows.Add("INR", 1);
-            dtCurrency.Rows.Add("USD", 75);
-            dtCurrency.Rows.Add("EUR", 85);
-            dtCurrency.Rows.Add("SAR", 20);
-            dtCurrency.Rows.Add("POUND",5);
-            dtCurrency.Rows.Add("DEM", 43);
+            string query = "Select Id,CurrencyName from Currency_Master";
+            cmd = new SqlCommand(query,con);
+            cmd.CommandType = CommandType.Text;
+            da = new SqlDataAdapter(cmd);
+            da.Fill(dtCurrency);
+            cmd.ExecuteScalar();
 
-                            cmbFromCurrency.ItemsSource = dtCurrency.DefaultView;
-                            cmbFromCurrency.DisplayMemberPath = "Text";
-                            cmbFromCurrency.SelectedValuePath = "Value";
-                            cmbFromCurrency.SelectedIndex = 0;
+            DataRow newRow = dtCurrency.NewRow();
+            newRow["Id"] = 0;
+            newRow["CurrencyName"] = "--Select--";
+            dtCurrency.Rows.InsertAt(newRow,0);
+            if(dtCurrency != null && dtCurrency.Rows.Count>0)
+            {
+                cmbFromCurrency.ItemsSource = dtCurrency.DefaultView;
+                cmbToCurrency.ItemsSource = dtCurrency.DefaultView;
+            }
 
-                                cmbToCurrency.ItemsSource = dtCurrency.DefaultView;
-                                cmbToCurrency.DisplayMemberPath = "Text";
-                                cmbToCurrency.SelectedValuePath = "Value";
-                                cmbToCurrency.SelectedIndex = 0;
+            con.Close();
+
+            cmbFromCurrency.DisplayMemberPath = "CurrencyName";
+            cmbFromCurrency.SelectedValuePath = "Id";
+            cmbFromCurrency.SelectedIndex = 0;
+
+                    cmbToCurrency.DisplayMemberPath = "CurrencyName";
+                    cmbToCurrency.SelectedValuePath = "Id";
+                    cmbToCurrency.SelectedIndex = 0;
+                            
+        }
+        private void mycon()
+        {
+            string Conn = ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString.ToString();
+            con = new SqlConnection();
+            con.Open();
         }
         private void Convert_Click(object sender, RoutedEventArgs e){
+
             double ConvertedValue;
             if (txtCurrency.Text==null||txtCurrency.Text.Trim()==""){
                 MessageBox.Show("Please Enter Currency", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -97,7 +123,6 @@ namespace CurrencyConverter
         {
 
         }
-
         private void dgvCurrency_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
 
