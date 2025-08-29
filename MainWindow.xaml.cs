@@ -31,6 +31,7 @@ namespace CurrencyConverter
             InitializeComponent();
             BindCurrency();
             mycon();
+            GetData();
         }
            private void BindCurrency(){
             mycon();
@@ -39,7 +40,7 @@ namespace CurrencyConverter
             cmd = new SqlCommand(query,con);
             cmd.CommandType = CommandType.Text;
             da = new SqlDataAdapter(cmd);
-            da.Fill(dtCurrency);
+            da.Fill(dtCurrency); 
             cmd.ExecuteScalar();
 
             DataRow newRow = dtCurrency.NewRow();
@@ -66,7 +67,7 @@ namespace CurrencyConverter
         private void mycon()
         {
             string Conn = ConfigurationManager.ConnectionStrings["ConnectionString"].ConnectionString.ToString();
-            con = new SqlConnection();
+            con = new SqlConnection(Conn);
             con.Open();
         }
         private void Convert_Click(object sender, RoutedEventArgs e){
@@ -117,14 +118,159 @@ namespace CurrencyConverter
         }
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                if (txtAmount.Text == null || txtAmount.Text.Trim() == "")
+                {
+                    MessageBox.Show("Please Enter Amount", "Information", MessageBoxButton.OK, MessageBoxImage.Error);
+                    txtAmount.Focus();
+                    return;
+                }
+                else if (txtCurrencyName.Text == null || txtCurrencyName.Text.Trim() == "")
+                {
+                    MessageBox.Show("Please Enter Currency Name", "Information", MessageBoxButton.OK, MessageBoxImage.Error);
+                    txtCurrencyName.Focus();
+                    return;
 
+                }
+                else
+                {
+                    if (CurrencyId > 0)
+                    {
+                        if (MessageBox.Show("Are you sure you want to Update ?", "Information", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            mycon();
+                            DataTable dt = new DataTable();
+                            cmd = new SqlCommand("UPDATE Currency_Master SET Amount=@Amount,CurrencyName=@CurrencyName Where Id= @Id", con);
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@Id", CurrencyId);
+                            cmd.Parameters.AddWithValue("@Amount", txtAmount.Text);
+                            cmd.Parameters.AddWithValue("@CurrencyName", txtCurrencyName.Text);
+                            cmd.ExecuteNonQuery();
+                            con.Close();
+                            MessageBox.Show("Data Updated successfully", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                            GetData();
+                        }
+                    }
+                    else
+                    {
+                        if (MessageBox.Show("Are you sure you want to Save ?", "Information", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        {
+                            mycon();
+                            DataTable dt = new DataTable();
+                            cmd = new SqlCommand("INSERT INTO Currency_Master(Amount, CurrencyName) VALUES(@Amount, @CurrencyName)", con);
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@Amount", txtAmount.Text);
+                            cmd.Parameters.AddWithValue("@CurrencyName", txtCurrencyName.Text);
+                            cmd.ExecuteNonQuery();
+                            con.Close();
+                            MessageBox.Show("Data saved successfully", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                            GetData();
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        
+      private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
-
+            try
+            {
+                ClearControls();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+        
         private void dgvCurrency_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
         {
+            try
+            {
+                
+                DataGrid grd = (DataGrid)sender;
+                DataRowView row_selected = grd.CurrentItem as DataRowView;
+                if (row_selected != null)
+                {
+
+                  
+                    if (dgvCurrency.Items.Count > 0)
+                    {
+                        if (grd.SelectedCells.Count > 0)
+                        {
+                            CurrencyId = Int32.Parse(row_selected["Id"].ToString());
+                            if (grd.SelectedCells[0].Column.DisplayIndex == 0)
+                            {
+                                txtAmount.Text = row_selected["Amount"].ToString();
+                                txtCurrencyName.Text = row_selected["CurrencyName"].ToString();
+                                btnSave.Content = "Update";
+                            }     
+                            if (grd.SelectedCells[0].Column.DisplayIndex == 1)
+                            {
+                                if (MessageBox.Show("Are you sure you want to delete ?", "Information", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                                {
+                                    mycon();
+                                    DataTable dt = new DataTable();
+                                    cmd = new SqlCommand("DELETE FROM Currency_Master WHERE Id = @Id", con);
+                                    cmd.CommandType = CommandType.Text;
+                                    cmd.Parameters.AddWithValue("@Id", CurrencyId);
+                                    cmd.ExecuteNonQuery();
+                                    con.Close();
+                                    MessageBox.Show("Data deleted successfully", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        
+        public void GetData()
+        {
+            mycon();
+            DataTable dt = new DataTable();    
+            cmd = new SqlCommand("SELECT * FROM Currency_Master", con);    
+            cmd.CommandType = CommandType.Text;
+            da = new SqlDataAdapter(cmd);
+  
+            da.Fill(dt);
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                dgvCurrency.ItemsSource = dt.DefaultView;
+            }
+            else
+            {
+                dgvCurrency.ItemsSource = null;
+            }
+            con.Close();
+        }
+        public void ClearMaster()
+        {
+            try
+            {
+                txtAmount.Text = string.Empty;
+                txtCurrencyName.Text = string.Empty;
+                btnSave.Content = "Save";
+                GetData();
+                BindCurrency();
+                txtAmount.Focus();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+         
 
         }
     }
