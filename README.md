@@ -77,3 +77,7 @@ Foreign keys ensure clean relationships between currencies and rates.
 🤝 Contributing
 
 Pull requests welcome! For major changes, open an issue first to discuss your ideas.
+
+📜 License
+
+MIT License
