@@ -1,6 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Data;
 using System.Globalization;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -8,15 +12,44 @@ namespace CurrencyConverter
 {
     public partial class MainWindow : Window
     {
+        Root val = new Root();
         public MainWindow()
         {
             InitializeComponent();
+            GetValue();
+            
+        }
+        public static async Task<Root> GetData<T> (string url)
+        {
+            var myroot = new Root();
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromMinutes(1);
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        var responseString = await response.Content.ReadAsStringAsync();
+                        var responseObject = JsonConvert.DeserializeObject<Root>(responseString);
+                        //MessageBox.Show("TimeStamp: " + responseObject.timestamp, "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return responseObject;
+                    }
+                    return myroot;
+                }
+            }
+            catch{
+                return myroot;
+            }
+        }
+        public async void GetValue()
+        {
+            val = await GetData<Root>("https://openexchangerates.org/api/latest.json?app_id=c6c38010df72452eae0eeda04f3e6f2c");
             BindCurrency();
         }
-
         private void BindCurrency()
         {
-            DataTable dtCurrency = CurrencyService.GetCurrencyTable();
+            DataTable dtCurrency = BuildCurrencyTable();
 
             cmbFromCurrency.ItemsSource = dtCurrency.DefaultView;
             cmbFromCurrency.DisplayMemberPath = "Text";
@@ -62,7 +95,7 @@ namespace CurrencyConverter
             double fromRate = (double)cmbFromCurrency.SelectedValue;
             double toRate = (double)cmbToCurrency.SelectedValue;
 
-            double converted = CurrencyService.ConvertAmount(amount, fromRate, toRate);
+            double converted = ConvertAmount(amount, fromRate, toRate);
 
             lblCurrency.Content = $"{cmbToCurrency.Text} {converted:N3}";
         }
@@ -94,33 +127,34 @@ namespace CurrencyConverter
             lblCurrency.Content = string.Empty;
             txtCurrency.Focus();
         }
-    }
 
-    // Static helper moved out of the Window class so conversion logic and currency data are reusable/testable.
-    public static class CurrencyService
-    {
-        public static DataTable GetCurrencyTable()
+        // Integrated (non-reusable) currency helpers moved inside the Window class:
+
+        private DataTable BuildCurrencyTable()
         {
             var dt = new DataTable();
             dt.Columns.Add("Text", typeof(string));
             dt.Columns.Add("Value", typeof(double));
 
-            dt.Rows.Add("--Select--", 0.0);
-            dt.Rows.Add("INR", 1.0);
-            dt.Rows.Add("USD", 75.0);
-            dt.Rows.Add("EUR", 85.0);
-            dt.Rows.Add("SAR", 20.0);
-            dt.Rows.Add("POUND", 5.0);
-            dt.Rows.Add("DEM", 43.0);
-
+            // Placeholder row uses 0.0 as the value so it's not a valid rate
+            dt.Rows.Add("--Select--");
+            dt.Rows.Add("INR",val.rates.INR);
+            dt.Rows.Add("USD", val.rates.USD);
+            dt.Rows.Add("EUR", val.rates.EUR);
+            dt.Rows.Add("CHF", val.rates.CHF);
+            dt.Rows.Add("POUND", val.rates.GBP);
+            dt.Rows.Add("AUD", val.rates.AUD);
+            dt.Rows.Add("CAD", val.rates.CAD);
+            dt.Rows.Add("CNY", val.rates.CNY);
+            dt.Rows.Add("JPY", val.rates.JPY);
             return dt;
         }
 
-        public static double ConvertAmount(double amount, double fromRate, double toRate)
+        private double ConvertAmount(double amount, double fromRate, double toRate)
         {
-            // Protect division by zero; original logic multiplied fromRate * amount / toRate
+            // Protect division by zero
             if (toRate == 0.0) return 0.0;
-            return (fromRate * amount) / toRate;
+            return (toRate * amount) / fromRate;
         }
     }
 }
